@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logowanie | MALS Racing</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* =========================================
+           1. BAZA I STRUKTURA (Układ 1/5 i 4/5)
+           ========================================= */
+        body { background-color: #0b0b0b; color: #ffffff; font-family: 'Montserrat', sans-serif; height: 100vh; margin: 0; padding: 20px; overflow: hidden; }
+
+        .auth-layout { display: flex; height: 100%; gap: 20px; }
+
+        .auth-form-side { flex: 1; /* 1/5 przestrzeni */ display: flex; flex-direction: column; justify-content: center; min-width: 300px; padding: 0 10px; }
+
+        .auth-video-side { flex: 4; /* 4/5 przestrzeni */ height: 100%; }
+
+        /* =========================================
+           2. DETALE WIZUALNE
+           ========================================= */
+        .racing-title { font-family: 'Bebas Neue', sans-serif; font-size: 5rem; line-height: 0.85; text-transform: uppercase; color: #ffffff; font-style: italic; margin: 0; text-align: center; }
+
+        .video-bubble { width: 100%; height: 100%; border-radius: 2rem; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #222; }
+        .video-bubble video { width: 100%; height: 100%; object-fit: cover; }
+
+        .input-custom { background-color: #161616 !important; border: 1px solid #333; color: #ffffff !important; border-radius: 0.8rem; padding: 12px; transition: border-color 0.2s, background-image 0.2s; }
+        .input-custom:focus { background-color: #222; border-color: #e63946; box-shadow: none; }
+
+
+        .was-validated .input-custom:invalid {
+            border-color: #e63946;
+            padding-right: calc(1.5em + 0.75rem);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23e63946'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23e63946' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+        .invalid-feedback-custom { display: none; color: #e63946; font-size: 0.8rem; text-align: left; margin-top: 5px; font-weight: bold; padding-left: 5px; }
+        .was-validated .input-custom:invalid ~ .invalid-feedback-custom { display: block; }
+
+        .btn-racing { background-color: #e63946; color: white; font-weight: bold; border-radius: 0.8rem; padding: 12px; text-transform: uppercase; transition: 0.2s; }
+        .btn-racing:hover { background-color: #b32a36; color: white; }
+
+        .input-custom::placeholder { color: rgba(255, 255, 255, 0.6) !important; opacity: 1; }
+
+        @media (max-width: 1024px) {
+            .auth-layout { flex-direction: column-reverse; overflow-y: auto; height: auto; }
+            body { overflow-y: auto; height: auto; }
+            .auth-video-side { flex: none; height: 300px; width: 100%; margin-bottom: 20px; }
+            .auth-form-side { padding-bottom: 50px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-layout">
+
+    <div class="auth-form-side text-center">
+        <div style="width: 100%; max-width: 350px; margin: 0 auto;">
+            <div class="mb-5">
+                <a th:href="@{/}" class="text-decoration-none">
+                    <h1 class="racing-title">MALS<br><span style="color: #e63946;">RACING</span></h1>
+                </a>
+            </div>
+
+            <h5 class="fw-bold mb-4 text-uppercase">Zaloguj się do Paddocku</h5>
+
+            <div th:if="${param.error}" class="alert alert-danger rounded-0 border-0 mb-3" style="background: rgba(255,0,0,0.1); color: #e63946; font-weight: bold; font-size: 0.9rem;">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i> Nieprawidłowy email lub hasło.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success rounded-0 border-0 mb-3" style="background: rgba(0,255,0,0.1); color: #00ff00; font-weight: bold; font-size: 0.9rem;">
+                <i class="bi bi-check-circle-fill me-2"></i> Wylogowano pomyślnie.
+            </div>
+
+            <div th:if="${param.success}" class="alert alert-success rounded-0 border-0 mb-3" style="background: rgba(0,255,0,0.1); color: #00ff00; font-weight: bold; font-size: 0.9rem;">
+                <i class="bi bi-check-circle-fill me-2"></i> Konto utworzone! Zaloguj się.
+            </div>
+
+            <form th:action="@{/login}" method="post" id="login-form" novalidate>
+                <div class="mb-3 position-relative text-start">
+                    <input type="email" id="username" name="username" class="form-control input-custom" placeholder="Adres Email" required autofocus>
+                    <div class="invalid-feedback-custom">Proszę podać prawidłowy email.</div>
+                </div>
+
+                <div class="mb-4 position-relative text-start">
+                    <input type="password" id="password" name="password" class="form-control input-custom" placeholder="Hasło" required>
+                    <div class="invalid-feedback-custom">Proszę podać hasło.</div>
+                </div>
+
+                <button type="submit" id="login-btn" class="btn w-100 btn-racing mb-3">Zaloguj <i class="bi bi-box-arrow-in-right ms-2"></i></button>
+            </form>
+
+            <div class="text-center mt-4 pt-3 border-top border-secondary">
+                <p class="text-secondary small">
+                    Nie masz konta? <br>
+                    <a th:href="@{/register}" class="text-white text-decoration-none fw-bold" style="color: #e63946 !important;">
+                        Zarejestruj się tutaj <i class="bi bi-arrow-right"></i>
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-video-side">
+        <div class="video-bubble">
+            <video autoplay loop muted playsinline>
+                <source src="/videos/login.webm" type="video/webm">
+            </video>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // ==========================================
+        // 1. ZRESETOWANIE ŚWIATEŁ STARTOWYCH
+        // ==========================================
+        sessionStorage.removeItem('introPlayed');
+
+        // ==========================================
+        // 2. WALIDACJA FORMULARZA FRONT-END
+        // ==========================================
+        const loginForm = document.getElementById('login-form');
+        const loginBtn = document.getElementById('login-btn');
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', function (event) {
+                if (!loginForm.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                } else {
+                    if(loginBtn) {
+                        loginBtn.innerHTML = 'Logowanie...';
+                        loginBtn.style.opacity = '0.8';
+                        loginBtn.style.pointerEvents = 'none';
+                    }
+                }
+                loginForm.classList.add('was-validated');
+            }, false);
+        }
+    });
+</script>
+
+</body>
+</html>

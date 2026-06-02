@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Edycja: ' + ${race.track.name} + ' | MALS Racing'">Edycja Wyścigu</title>
+
+    <link rel="icon" type="image/png" th:href="@{/photos/rect1.png}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root { scroll-behavior: smooth; }
+        body { background-color: #050505; color: #ffffff; font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+        .text-accent { color: #e63946; }
+        .title-bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+        .video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; object-fit: cover; }
+        .video-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.95) 100%); z-index: -1; }
+
+        section { padding: 100px 20px 80px 20px; }
+        .glass-card { background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 2.5rem; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+
+
+        .form-label { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #aaaaaa; margin-bottom: 0.5rem; }
+
+        .form-control, .form-select {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 12px 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-color: #e63946;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(230, 57, 70, 0.25);
+        }
+
+
+        option { background-color: #111111; color: #ffffff; }
+
+        .form-check-input:checked { background-color: #e63946; border-color: #e63946; }
+        .form-check-input:focus { box-shadow: 0 0 0 0.25rem rgba(230, 57, 70, 0.25); border-color: #e63946; }
+
+        .btn-racing { background-color: #e63946; color: white; padding: 12px 30px; border-radius: 50px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border: none; transition: 0.3s; }
+        .btn-racing:hover { background-color: #b32a36; color: white; box-shadow: 0 0 15px rgba(230, 57, 70, 0.4); transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+<video autoplay loop muted playsinline class="video-bg"><source th:src="@{/videos/menu.webm}" type="video/webm"></video>
+<div class="video-overlay"></div>
+
+<section>
+    <div class="container" style="max-width: 900px;">
+        <a th:href="@{/races/{id}(id=${race.id})}" class="btn btn-outline-light rounded-pill px-4 mb-4">
+            <i class="bi bi-arrow-left me-2"></i> Anuluj i wróć
+        </a>
+
+        <div class="glass-card">
+            <div class="mb-5 border-bottom border-secondary border-opacity-25 pb-3">
+                <h1 class="title-bebas text-white mb-1">Edycja Rundy</h1>
+                <h3 class="text-accent fw-bold" th:text="${race.track.name}">Tor</h3>
+                <p class="text-white-50 mt-2 mb-0 small">Zaktualizuj wybrane parametry wyścigu. Zmiana toru lub symulatora nie usunie dotychczasowych zapisów graczy.</p>
+            </div>
+
+            <form th:action="@{/races/{id}/edit(id=${race.id})}" th:object="${raceDto}" method="post" enctype="multipart/form-data">
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-geo-alt me-1"></i> Tor</label>
+                        <select th:field="*{trackId}" class="form-select" required>
+                            <option th:each="t : ${tracks}" th:value="${t.id}" th:text="${t.name}"></option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-trophy me-1"></i> Sezon</label>
+                        <select th:field="*{seasonId}" class="form-select" required>
+                            <option th:each="s : ${seasons}" th:value="${s.id}" th:text="${s.name} + ' (' + ${s.year} + ')'"></option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="bi bi-controller me-1"></i> Gra / Symulator</label>
+                        <select th:field="*{game}" class="form-select" required>
+                            <option value="Assetto Corsa">Assetto Corsa</option>
+                            <option value="Assetto Corsa Evo">Assetto Corsa Evo</option>
+                            <option value="Assetto Corsa Competizione">Assetto Corsa Competizione</option>
+                            <option value="iRacing">iRacing</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Data Wyścigu</label>
+                        <input type="date" th:field="*{raceDate}" class="form-control" required/>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Liczba Okrążeń</label>
+                        <input type="number" th:field="*{laps}" class="form-control" min="1" required/>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <label class="form-label text-white"><i class="bi bi-image me-1"></i> Nowa Grafika (Opcjonalnie)</label>
+                        <p class="text-white-50 small mb-2">Wybranie nowego pliku całkowicie nadpisze obecną grafikę przypisaną do tego wyścigu.</p>
+                        <input type="file" th:field="*{image}" accept="image/*" class="form-control"/>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <label class="form-label"><i class="bi bi-card-text me-1"></i> Dodatkowy Opis / Zasady</label>
+                        <textarea th:field="*{description}" class="form-control" rows="4" placeholder="Wpisz szczegółowe informacje dotyczące wyścigu..."></textarea>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <div class="form-check form-switch bg-dark bg-opacity-50 p-3 rounded-3 border border-secondary border-opacity-25 d-flex align-items-center">
+                            <input class="form-check-input ms-0 me-3 fs-4 mt-0" type="checkbox" role="switch" th:field="*{private}" id="isPrivate">
+                            <label class="form-check-label fw-bold text-white mb-0" for="isPrivate" style="letter-spacing: 0.5px;">
+                                Oznacz jako Wyścig Prywatny (Testowy)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-5 text-end">
+                        <button type="submit" class="btn btn-racing w-100 fs-5"><i class="bi bi-save me-2"></i> Zapisz Zmiany</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

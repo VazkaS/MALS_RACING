@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Sezonów | MALS Racing</title>
+
+    <link rel="icon" type="image/png" th:href="@{/photos/rect1.png}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* =========================================
+           1. BAZA I ESTETYKA
+           ========================================= */
+        :root { scroll-behavior: smooth; }
+        body {
+            background-color: #050505; color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        .text-accent { color: #e63946; }
+        .title-bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+
+        .video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; object-fit: cover; }
+        .video-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%); z-index: -1; }
+
+        /* =========================================
+           2. PŁYWAJĄCA NAWIGACJA
+           ========================================= */
+        .navbar-wrapper { position: fixed; top: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
+        .navbar-custom { width: 95%; max-width: 1400px; background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .brand-box { background-color: rgba(230, 57, 70, 0.9); display: inline-block; border-radius: 50px; padding: 5px 20px; transition: transform 0.2s; }
+        .brand-text { color: #ffffff !important; font-size: 1.1rem; font-weight: bold; margin: 0; text-transform: uppercase; font-family: 'Montserrat', sans-serif; }
+        .nav-link { color: #ccc !important; text-transform: uppercase; font-weight: bold; font-size: 0.85rem; letter-spacing: 1px; transition: 0.2s; margin: 0 12px; }
+        .nav-link:hover, .nav-link.active { color: #e63946 !important; }
+        .btn-racing { background-color: #e63946; color: white; font-weight: bold; text-transform: uppercase; border: none; padding: 8px 25px; border-radius: 50px; transition: 0.3s; font-size: 0.85rem;}
+        .btn-racing:hover { background-color: #b32a36; color: white;}
+
+        .role-badge { display: inline-flex; align-items: center; padding: 8px 18px; border-radius: 50px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; font-size: 0.8rem; margin: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); }
+        .role-admin { background: linear-gradient(45deg, #8b0000, #ff4040); color: white; }
+
+        /* =========================================
+           3. KARTY SEZONÓW (GRID)
+           ========================================= */
+        section { min-height: 100vh; padding: 140px 20px 80px 20px; }
+
+        .admin-panel { background: rgba(230, 57, 70, 0.1); border: 1px solid #e63946; border-radius: 20px; padding: 30px; margin-bottom: 50px; backdrop-filter: blur(10px); }
+        .input-custom { background: rgba(0,0,0,0.4) !important; border: 1px solid rgba(255,255,255,0.2); color: #fff !important; border-radius: 10px; padding: 10px 15px; transition: 0.3s; }
+        .input-custom:focus { border-color: #e63946; box-shadow: 0 0 10px rgba(230, 57, 70, 0.3); outline: none; }
+
+        .season-card {
+            border-radius: 20px; min-height: 250px; overflow: hidden; position: relative;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .season-card:hover { transform: translateY(-10px); box-shadow: 0 25px 50px rgba(230,57,70,0.3); border-color: #e63946; }
+
+        .season-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: -2; transition: transform 0.6s ease;
+        }
+        .season-card:hover .season-bg { transform: scale(1.08); }
+
+        .season-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 60%, rgba(10,10,10,0.95) 100%);
+        }
+        .season-overlay-archived {
+            background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.8) 60%, rgba(10,10,10,0.95) 100%);
+            mix-blend-mode: multiply;
+        }
+
+        .badge-active { background: #00e676; color: #000; font-weight: 900; letter-spacing: 1px; }
+        .badge-archived { background: #555; color: #fff; font-weight: 900; letter-spacing: 1px; }
+
+        .section-title { border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 30px; }
+
+    </style>
+</head>
+<body>
+
+<video autoplay loop muted playsinline class="video-bg">
+    <source th:src="@{/videos/menu.webm}" type="video/webm">
+</video>
+<div class="video-overlay"></div>
+
+<div class="navbar-wrapper">
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="text-decoration-none d-flex align-items-center" th:href="@{/}">
+                <img th:src="@{/photos/rect1.png}" alt="Logo MALS" style="height: 25px; margin-right: 10px;">
+                <div class="brand-box"><span class="brand-text">MALS <span class="text-dark">Racing</span></span></div>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link text-accent active" th:href="@{/seasons}">Sezony</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/races}">Kalendarz</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/drivers}">Kierowcy</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/tracks}">Tory</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3" th:if="${isLoggedIn}">
+                        <a class="nav-link text-accent" th:href="@{/profile}">Twój Profil</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:if="${isLoggedIn}">
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-racing"><i class="bi bi-power me-1"></i> Wyloguj</button>
+                        </form>
+                    </li>
+                    <li class="nav-item me-3" th:unless="${isLoggedIn}">
+                        <a class="nav-link" th:href="@{/login}">Logowanie</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:unless="${isLoggedIn}">
+                        <a th:href="@{/register}" class="btn btn-racing"><i class="bi bi-person-plus-fill me-1"></i> Dołącz do nas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<section>
+    <div class="container" style="max-width: 1200px;">
+
+        <div th:if="${isLoggedIn}" class="text-center mb-4">
+            <div th:if="${isGlobalAdmin}" class="role-badge role-admin">
+                <i class="bi bi-shield-lock-fill me-2"></i> Tryb Administratora
+            </div>
+        </div>
+
+        <div class="text-center mb-5">
+            <h1 class="title-bebas text-white" style="font-size: 5rem; line-height: 1;">KAMPANIE I <span class="text-accent">SEZONY</span></h1>
+
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a th:href="@{/seasons/points-system}" class="btn btn-outline-warning rounded-pill px-4 py-2 fw-bold" style="border-width: 2px;">
+                    <i class="bi bi-trophy-fill me-2"></i> System Punktacji Ligi
+                </a>
+            </div>
+        </div>
+
+        <div th:if="${param.success}" class="alert alert-success rounded-3 mb-5 fw-bold border-0 text-center mx-auto" style="background: rgba(0,255,100,0.1); color: #00ff64; max-width: 600px;">
+            <i class="bi bi-check-circle-fill me-2"></i> Nowy sezon / event został pomyślnie dodany i oczekuje na aktywację!
+        </div>
+
+        <div th:if="${isAdmin}" class="admin-panel mx-auto" style="max-width: 900px;">
+            <h4 class="title-bebas text-accent mb-4"><i class="bi bi-plus-square-dotted me-2"></i> Panel Admina: Utwórz Nowy Sezon / Event</h4>
+            <form th:action="@{/seasons}" th:object="${newSeason}" method="post" enctype="multipart/form-data">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label text-white-50 small text-uppercase fw-bold">Nazwa Sezonu / Eventu</label>
+                        <input type="text" th:field="*{name}" class="form-control input-custom" required placeholder="np. Puchar Zimowy" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-white-50 small text-uppercase fw-bold">Rok</label>
+                        <input type="number" th:field="*{year}" class="form-control input-custom" required placeholder="2026" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-white-50 small text-uppercase fw-bold">Grafika / Baner (Opcjonalnie)</label>
+                        <input type="file" th:field="*{image}" class="form-control input-custom" accept="image/*" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-racing w-100 py-2"><i class="bi bi-plus-lg"></i> Dodaj</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <h2 class="title-bebas section-title text-white"><i class="bi bi-record-circle-fill me-2" style="color: #00e676;"></i> Aktywne Sezony i Eventy</h2>
+        <div class="row g-4 mb-5">
+            <div class="col-md-6 col-lg-4" th:each="season : ${activeSeasons}">
+                <a th:href="@{/seasons/{id}(id=${season.id})}" class="text-decoration-none">
+                    <div class="season-card">
+                        <img th:if="${season.backgroundImage != null}" th:src="'data:image/jpeg;base64,' + ${season.backgroundImage}" class="season-bg" alt="Tło">
+                        <div th:unless="${season.backgroundImage != null}" class="season-bg bg-dark d-flex align-items-center justify-content-center">
+                            <i class="bi bi-flag text-white-50" style="font-size: 5rem; opacity: 0.1;"></i>
+                        </div>
+
+                        <div class="season-overlay"></div>
+
+                        <div class="p-4 z-1">
+                            <span class="badge badge-active rounded-pill px-3 py-1 mb-2">TRWAJĄCY</span>
+                            <h3 class="title-bebas text-white fs-2 mb-0" th:text="${season.name}">Sezon Name</h3>
+                            <p class="text-white-50 fw-bold mb-0"><i class="bi bi-calendar-event me-2"></i> ROK: <span th:text="${season.year}">2026</span></p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div th:if="${activeSeasons.isEmpty()}" class="col-12">
+                <div class="text-center p-5 border border-secondary border-opacity-25 rounded-4" style="background: rgba(255,255,255,0.02);">
+                    <p class="text-white-50 mb-0 fst-italic">Aktualnie nie toczą się żadne aktywne sezony lub eventy.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="title-bebas section-title text-white mt-5"><i class="bi bi-clock-history me-2" style="color: #00bbf9;"></i> Nadchodzące Wyzwania (Oczekujące)</h2>
+        <div class="row g-4 mb-5">
+            <div class="col-md-6 col-lg-4" th:each="season : ${upcomingSeasons}">
+                <a th:href="@{/seasons/{id}(id=${season.id})}" class="text-decoration-none">
+                    <div class="season-card" style="border-color: rgba(0,187,249,0.15);">
+                        <img th:if="${season.backgroundImage != null}" th:src="'data:image/jpeg;base64,' + ${season.backgroundImage}" class="season-bg" alt="Tło">
+                        <div th:unless="${season.backgroundImage != null}" class="season-bg bg-dark d-flex align-items-center justify-content-center">
+                            <i class="bi bi-hourglass-split text-white-50" style="font-size: 5rem; opacity: 0.1;"></i>
+                        </div>
+
+                        <div class="season-overlay" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 60%, rgba(10,10,10,0.95) 100%);"></div>
+
+                        <div class="p-4 z-1">
+                            <span class="badge rounded-pill px-3 py-1 mb-2" style="background: #00bbf9; color: #000; font-weight: 900; letter-spacing: 1px;">PLANOWANY</span>
+                            <h3 class="title-bebas text-white fs-3 mb-0" th:text="${season.name}">Sezon Name</h3>
+                            <p class="text-white-50 small fw-bold mb-0"><i class="bi bi-calendar me-2"></i> ROK: <span th:text="${season.year}">2026</span></p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div th:if="${upcomingSeasons.isEmpty()}" class="col-12">
+                <div class="text-center p-4 border border-secondary border-opacity-10 rounded-4" style="background: rgba(255,255,255,0.01);">
+                    <p class="text-white-50 mb-0 small fst-italic">Brak zaplanowanych kolejnych sezonów w kolejce.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="title-bebas section-title text-white-50 mt-5"><i class="bi bi-archive-fill me-2"></i> Archiwum Zakończonych</h2>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4" th:each="season : ${archivedSeasons}">
+                <a th:href="@{/seasons/{id}(id=${season.id})}" class="text-decoration-none">
+                    <div class="season-card" style="opacity: 0.8; filter: grayscale(50%); border-color: rgba(255,255,255,0.05);">
+                        <img th:if="${season.backgroundImage != null}" th:src="'data:image/jpeg;base64,' + ${season.backgroundImage}" class="season-bg" alt="Tło">
+                        <div th:unless="${season.backgroundImage != null}" class="season-bg bg-dark d-flex align-items-center justify-content-center">
+                            <i class="bi bi-flag text-white-50" style="font-size: 5rem; opacity: 0.1;"></i>
+                        </div>
+
+                        <div class="season-overlay season-overlay-archived"></div>
+
+                        <div class="p-4 z-1">
+                            <span class="badge badge-archived rounded-pill px-3 py-1 mb-2">ZAKOŃCZONY</span>
+                            <h3 class="title-bebas text-white fs-3 mb-0" th:text="${season.name}">Sezon Name</h3>
+                            <p class="text-white-50 small fw-bold mb-0"><i class="bi bi-calendar-check me-2"></i> ROK: <span th:text="${season.year}">2026</span></p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div th:if="${archivedSeasons.isEmpty()}" class="col-12">
+                <div class="text-center p-5 border border-secondary border-opacity-25 rounded-4" style="background: rgba(255,255,255,0.02);">
+                    <p class="text-white-50 mb-0 fst-italic">Archiwum sezonów jest puste.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

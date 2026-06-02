@@ -1,0 +1,14 @@
+package com.example.menedzeramatorskiejligisimracingowej.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TrackRecordDto {
+    private String trackName;
+    private String gameName;
+    private String formattedTime;
+}

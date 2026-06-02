@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Kierowcy | MALS Racing</title>
+
+    <link rel="icon" type="image/png" th:href="@{/photos/rect1.png}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* =========================================
+           1. BAZA I ESTETYKA
+           ========================================= */
+        :root { scroll-behavior: smooth; }
+        body {
+            background-color: #050505; color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        .text-accent { color: #e63946; }
+        .title-bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+        /* Wideo w tle */
+        .video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; object-fit: cover; }
+        .video-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%); z-index: -1; }
+
+        /* =========================================
+           2. PŁYWAJĄCA NAWIGACJA
+           ========================================= */
+        .navbar-wrapper { position: fixed; top: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
+        .navbar-custom { width: 95%; max-width: 1400px; background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .brand-box { background-color: rgba(230, 57, 70, 0.9); display: inline-block; border-radius: 50px; padding: 5px 20px; transition: transform 0.2s; }
+        .brand-text { color: #ffffff !important; font-size: 1.1rem; font-weight: bold; margin: 0; text-transform: uppercase; font-family: 'Montserrat', sans-serif; }
+        .nav-link { color: #ccc !important; text-transform: uppercase; font-weight: bold; font-size: 0.85rem; letter-spacing: 1px; transition: 0.2s; margin: 0 12px; }
+        .nav-link:hover { color: #e63946 !important; }
+        .btn-racing { background-color: #e63946; color: white; font-weight: bold; text-transform: uppercase; border: none; padding: 8px 25px; border-radius: 50px; transition: 0.3s; font-size: 0.85rem;}
+        .btn-racing:hover { background-color: #b32a36; color: white;}
+
+        /* =========================================
+           3. KARTY, TABELE I PROFILE
+           ========================================= */
+        section { min-height: 100vh; padding: 120px 20px 80px 20px; }
+
+        .glass-card {
+            background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 20px;
+            padding: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* Awatar */
+        .avatar-container { position: relative; width: 160px; height: 160px; margin: 0 auto 20px auto; }
+        .avatar-img {
+            width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+            border: 4px solid #e63946; box-shadow: 0 0 25px rgba(230, 57, 70, 0.4);
+        }
+        .avatar-placeholder {
+            width: 100%; height: 100%; border-radius: 50%; background: #222;
+            display: flex; align-items: center; justify-content: center;
+            border: 4px solid #444; font-size: 4rem; color: #555;
+        }
+
+        /* Statystyki */
+        .stat-card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px; padding: 20px; text-align: center; transition: 0.3s; height: 100%;
+        }
+        .stat-card:hover { background: rgba(255,255,255,0.08); transform: translateY(-5px); }
+        .stat-card.gold-border { border-bottom: 3px solid goldenrod; }
+        .stat-card.red-border { border-bottom: 3px solid #e63946; }
+
+        /* Customowe Tabele Glassmorphism */
+        .table-custom { color: white; margin-bottom: 0; }
+        .table-custom th { border-bottom: 2px solid rgba(255,255,255,0.2) !important; background: transparent; color: #aaa; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .table-custom td { border-bottom: 1px solid rgba(255,255,255,0.05) !important; background: transparent; vertical-align: middle; color: #ddd; }
+        .table-custom tbody tr { transition: background-color 0.2s; }
+        .table-custom tbody tr:hover { background-color: rgba(255,255,255,0.05); }
+
+        .btn-outline-light:hover { color: #000; }
+
+    </style>
+</head>
+<body>
+
+<video autoplay loop muted playsinline class="video-bg">
+    <source th:src="@{/videos/menu.webm}" type="video/webm">
+</video>
+<div class="video-overlay"></div>
+
+<div class="navbar-wrapper">
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="text-decoration-none d-flex align-items-center" th:href="@{/}">
+                <img th:src="@{/photos/rect1.png}" alt="Logo MALS" style="height: 25px; margin-right: 10px;">
+                <div class="brand-box"><span class="brand-text">MALS <span class="text-dark">Racing</span></span></div>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/seasons}">Sezony</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/races}">Kalendarz</a></li>
+                    <li class="nav-item"><a class="nav-link text-accent" th:href="@{/drivers}">Kierowcy</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/tracks}">Tory</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3" th:if="${isLoggedIn}">
+                        <a class="nav-link text-accent" th:href="@{/profile}">Twój Profil</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:if="${isLoggedIn}">
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-racing"><i class="bi bi-power me-1"></i> Wyloguj</button>
+                        </form>
+                    </li>
+                    <li class="nav-item me-3" th:unless="${isLoggedIn}">
+                        <a class="nav-link" th:href="@{/login}">Logowanie</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:unless="${isLoggedIn}">
+                        <a th:href="@{/register}" class="btn btn-racing"><i class="bi bi-person-plus-fill me-1"></i> Dołącz do nas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<section>
+    <div class="container">
+        <a th:href="@{/drivers}" class="btn btn-outline-light rounded-pill px-4 py-2 mb-4 fw-bold" style="font-size: 0.85rem;">
+            <i class="bi bi-arrow-left me-2"></i> Powrót do bazy kierowców
+        </a>
+
+        <div class="text-center mb-5">
+            <div class="avatar-container">
+                <img th:if="${driver.profilePicture != null}" th:src="'data:image/jpeg;base64,' + ${driver.profilePicture}"
+                     class="avatar-img" alt="Awatar Kierowcy"
+                     th:style="${stats.grandmaster} ? 'border-color: #ffcc00; box-shadow: 0 0 40px rgba(255, 153, 0, 0.7);' : ''" />
+                <div th:unless="${driver.profilePicture != null}" class="avatar-placeholder"
+                     th:style="${stats.grandmaster} ? 'border-color: #ffcc00; box-shadow: 0 0 40px rgba(255, 153, 0, 0.7); color: #ffcc00;' : ''">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+            </div>
+
+            <h1 class="title-bebas text-white mb-0" style="font-size: 5rem; line-height: 1;">
+                <span th:text="${driver.nickname}">NICK</span>
+            </h1>
+            <h3 class="title-bebas text-accent fs-1 mb-4">
+                #<span th:text="${driver.startingNumber}">44</span>
+            </h3>
+
+            <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+
+                <!-- Zmieniony dopisek na "Punkty (Obecny Sezon)" -->
+                <span class="badge bg-dark px-4 py-2 fs-6 rounded-pill" style="border: 1px solid rgba(255,255,255,0.2);">
+                    <i class="bi bi-trophy text-white-50 me-2"></i> Punkty (Obecny Sezon): <span th:text="${stats.totalPoints}" class="text-white fw-bold">0</span>
+                </span>
+
+                <span th:if="${stats.grandmaster}" class="badge px-4 py-2 fs-6 rounded-pill"
+                      style="background: linear-gradient(45deg, #ff9900, #ff0000); border: 2px solid #ffcc00; box-shadow: 0 0 20px rgba(255, 153, 0, 0.6); text-transform: uppercase; font-weight: 900; letter-spacing: 2px; cursor: help;"
+                      data-bs-toggle="tooltip" data-bs-placement="top"
+                      data-bs-title="Absolutny dominator: zdobył najwięcej punktów ze wszystkich kierowców w historii ligi!">
+                    <i class="bi bi-fire text-white me-2"></i> Grandmaster
+                </span>
+
+                <span th:if="${stats.championships > 0}" class="badge bg-warning text-dark px-4 py-2 fs-6 rounded-pill fw-bold"
+                      style="border: 2px solid #cda434; box-shadow: 0 0 15px rgba(255, 193, 7, 0.4); text-transform: uppercase; letter-spacing: 1px; cursor: help;"
+                      data-bs-toggle="tooltip" data-bs-placement="top"
+                      data-bs-title="Mistrz Kategorii: wygrał klasyfikację generalną w zarchiwizowanym sezonie w swoim symulatorze.">
+                    <i class="bi bi-star-fill me-1"></i> <span th:text="${stats.championships} + 'x Mistrz'"></span>
+                </span>
+
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5 justify-content-center">
+            <div class="col-6 col-md-3">
+                <div class="stat-card" data-tilt data-tilt-max="10" data-tilt-speed="400">
+                    <p class="text-white-50 text-uppercase fw-bold mb-1" style="font-size: 0.8rem;">Starty</p>
+                    <h2 class="title-bebas text-white fs-1 mb-0" th:text="${stats.totalRaces}">0</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card" data-tilt data-tilt-max="10" data-tilt-speed="400">
+                    <p class="text-white-50 text-uppercase fw-bold mb-1" style="font-size: 0.8rem;">Śr. Pozycja</p>
+                    <h2 class="title-bebas text-white fs-1 mb-0" th:text="${#numbers.formatDecimal(stats.averagePosition, 1, 2)}">0.00</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card gold-border" data-tilt data-tilt-max="10" data-tilt-speed="400">
+                    <p class="text-white-50 text-uppercase fw-bold mb-1" style="font-size: 0.8rem;">Podium Rate</p>
+                    <h2 class="title-bebas mb-0" style="color: goldenrod; font-size: 2.5rem;" th:text="${#numbers.formatDecimal(stats.podiumRate, 1, 1)} + '%'">0%</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card red-border" data-tilt data-tilt-max="10" data-tilt-speed="400">
+                    <p class="text-white-50 text-uppercase fw-bold mb-1" style="font-size: 0.8rem;">Ilość DNF</p>
+                    <h2 class="title-bebas text-accent fs-1 mb-0" th:text="${stats.dnfCount}">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-12 mb-4">
+                <div class="glass-card p-4">
+                    <h3 class="title-bebas mb-4" style="color: #00e676;"><i class="bi bi-calendar-event me-2"></i> Nadchodzące Starty</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                            <tr>
+                                <th style="width: 20%;">Data</th>
+                                <th style="width: 50%;">Tor</th>
+                                <th style="width: 30%;">Symulator</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="race : ${upcomingRaces}">
+                                <td class="fw-bold text-white-50" th:text="${race.raceDate}">2026-01-01</td>
+                                <td>
+                                    <a th:href="@{/races/{id}(id=${race.id})}" class="text-decoration-none text-white fw-bold hover-accent" style="transition: 0.2s;" onmouseover="this.style.color='#e63946'" onmouseout="this.style.color='white'">
+                                        <i class="bi bi-signpost-split me-1 text-accent"></i> <span th:text="${race.track.name}">Tor</span>
+                                    </a>
+                                </td>
+                                <td><span class="badge bg-dark border border-secondary text-white" th:text="${race.game}">Gra</span></td>
+                            </tr>
+                            <tr th:if="${upcomingRaces.isEmpty()}">
+                                <td colspan="3" class="text-center text-white-50 py-4 fst-italic">Ten kierowca nie jest obecnie zapisany na żadne przyszłe wyścigi.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12 mb-4" th:if="${!stats.trackRecords.isEmpty()}">
+                <div class="glass-card p-4" style="border-top: 4px solid #d848ff; box-shadow: 0 10px 30px rgba(216, 72, 255, 0.15);">
+                    <h3 class="title-bebas mb-4" style="color: #d848ff; text-shadow: 0 0 15px rgba(216, 72, 255, 0.4);">
+                        <i class="bi bi-stopwatch-fill me-2"></i> Rekordy Torów (Purple Laps)
+                    </h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead>
+                            <tr>
+                                <th class="text-start" style="width: 45%;">Tor Wyścigowy</th>
+                                <th style="width: 30%;">Symulator / Liga</th>
+                                <th style="width: 25%;">Najszybszy Czas</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="rec : ${stats.trackRecords}">
+                                <td class="text-start fw-bold text-white fs-5">
+                                    <i class="bi bi-lightning-charge-fill me-2" style="color: #d848ff; filter: drop-shadow(0 0 5px #d848ff);"></i>
+                                    <span th:text="${rec.trackName}">Spa-Francorchamps</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark border border-secondary text-white-50 px-3 py-2 rounded-pill fw-bold" th:text="${rec.gameName}">Assetto Corsa</span>
+                                </td>
+                                <td>
+                                    <span class="badge px-4 py-2 rounded-pill font-monospace fw-bold fs-6"
+                                          style="background: rgba(216, 72, 255, 0.15); border: 1px solid #d848ff; color: #d848ff; text-shadow: 0 0 10px rgba(216,72,255,0.5);">
+                                        <i class="bi bi-stopwatch me-1"></i> <span th:text="${rec.formattedTime}">1:45.320</span>
+                                    </span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="glass-card p-4" style="border-top: 4px solid #e63946;">
+                    <h3 class="title-bebas text-accent mb-4"><i class="bi bi-flag-fill me-2"></i> Historia Wyścigów</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead>
+                            <tr>
+                                <!-- Dodana kolumna "Sezon" i delikatnie dostosowane szerokości -->
+                                <th class="text-start" style="width: 15%;">Data</th>
+                                <th class="text-start" style="width: 15%;">Sezon</th>
+                                <th class="text-start" style="width: 35%;">Tor (Gra)</th>
+                                <th style="width: 15%;">Wynik końcowy</th>
+                                <th style="width: 20%;">Akcja</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="result : ${history}">
+                                <td class="text-start fw-bold text-white-50" th:text="${result.race.raceDate}">2026-01-01</td>
+
+                                <!-- Nowe pole ładujące nazwę sezonu -->
+                                <td class="text-start text-white-50 small" th:text="${result.race.season.name}">Sezon 1</td>
+
+                                <td class="text-start">
+                                    <span class="fw-bold text-white" th:text="${result.race.track.name}">Tor</span>
+                                    <span class="text-white-50 small ms-1" th:text="'(' + ${result.race.game} + ')'">(Gra)</span>
+                                </td>
+                                <td>
+                                    <span th:if="${result.isDnf}" class="badge bg-danger px-3 py-2 rounded-pill">DNF</span>
+                                    <span th:unless="${result.isDnf}" class="badge bg-light text-dark px-3 py-2 rounded-pill fw-bold" th:text="'P' + ${result.finalPosition}">P1</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/races/{id}(id=${result.race.id})}" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                                        Zobacz Wyniki <i class="bi bi-arrow-right-short"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${history.isEmpty()}">
+                                <td colspan="5" class="text-center text-white-50 py-4 fst-italic">Ten kierowca nie posiada jeszcze historii startów w MALS.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+
+</body>
+</html>

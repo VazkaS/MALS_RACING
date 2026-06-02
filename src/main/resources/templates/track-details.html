@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${track.name} + ' - Tablica Wyników | MALS Racing'">Tablica Wyników</title>
+
+    <link rel="icon" type="image/png" th:href="@{/photos/rect1.png}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* =========================================
+           1. BAZA I ESTETYKA
+           ========================================= */
+        :root { scroll-behavior: smooth; }
+        body {
+            background-color: #050505; color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        .text-accent { color: #e63946; }
+        .title-bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+
+        .video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; object-fit: cover; }
+        .video-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%); z-index: -1; }
+
+        /* =========================================
+           2. PŁYWAJĄCA NAWIGACJA
+           ========================================= */
+        .navbar-wrapper { position: fixed; top: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
+        .navbar-custom { width: 95%; max-width: 1400px; background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .brand-box { background-color: rgba(230, 57, 70, 0.9); display: inline-block; border-radius: 50px; padding: 5px 20px; transition: transform 0.2s; }
+        .brand-text { color: #ffffff !important; font-size: 1.1rem; font-weight: bold; margin: 0; text-transform: uppercase; font-family: 'Montserrat', sans-serif; }
+        .nav-link { color: #ccc !important; text-transform: uppercase; font-weight: bold; font-size: 0.85rem; letter-spacing: 1px; transition: 0.2s; margin: 0 12px; }
+        .nav-link:hover, .nav-link.active { color: #e63946 !important; }
+        .btn-racing { background-color: #e63946; color: white; font-weight: bold; text-transform: uppercase; border: none; padding: 8px 25px; border-radius: 50px; transition: 0.3s; font-size: 0.85rem;}
+        .btn-racing:hover { background-color: #b32a36; color: white;}
+
+        /* =========================================
+           3. KARTY, TABELE (HOTLAPY)
+           ========================================= */
+        section { min-height: 100vh; padding: 140px 20px 80px 20px; }
+
+        .glass-card {
+            background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 20px;
+            padding: 1.5rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); height: 100%;
+        }
+
+
+        .card-ac { border-top: 4px solid #e63946; }
+        .card-evo { border-top: 4px solid #9b5de5; }
+        .card-acc { border-top: 4px solid #00bbf9; }
+        .card-ir { border-top: 4px solid #fb5607; }
+
+
+        .time-ac { color: #e63946; }
+        .time-evo { color: #9b5de5; }
+        .time-acc { color: #00bbf9; }
+        .time-ir { color: #fb5607; }
+        .time-purple { color: #d848ff !important; text-shadow: 0 0 15px rgba(216, 72, 255, 0.8); }
+
+
+        .table-custom { color: white; margin-bottom: 0; }
+        .table-custom th { border-bottom: 2px solid rgba(255,255,255,0.2) !important; background: transparent; color: #aaa; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; padding: 10px; }
+        .table-custom td { border-bottom: 1px solid rgba(255,255,255,0.05) !important; background: transparent; vertical-align: middle; color: #ddd; padding: 10px; }
+        .table-custom tbody tr { transition: background-color 0.2s; }
+        .table-custom tbody tr:hover { background-color: rgba(255,255,255,0.05); }
+
+        /* Styl dla klikalnego nicku kierowcy */
+        .driver-link { color: #ffffff; text-decoration: none; transition: color 0.2s ease-in-out; }
+        .driver-link:hover { color: #e63946; }
+
+    </style>
+</head>
+<body>
+
+<video autoplay loop muted playsinline class="video-bg">
+    <source th:src="@{/videos/menu.webm}" type="video/webm">
+</video>
+<div class="video-overlay"></div>
+
+<div class="navbar-wrapper">
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="text-decoration-none d-flex align-items-center" th:href="@{/}">
+                <img th:src="@{/photos/rect1.png}" alt="Logo MALS" style="height: 25px; margin-right: 10px;">
+                <div class="brand-box"><span class="brand-text">MALS <span class="text-dark">Racing</span></span></div>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/seasons}">Sezony</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/races}">Kalendarz</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/drivers}">Kierowcy</a></li>
+                    <li class="nav-item"><a class="nav-link text-accent active" th:href="@{/tracks}">Tory</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3" th:if="${isLoggedIn}">
+                        <a class="nav-link text-accent" th:href="@{/profile}">Twój Profil</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:if="${isLoggedIn}">
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-racing"><i class="bi bi-power me-1"></i> Wyloguj</button>
+                        </form>
+                    </li>
+                    <li class="nav-item me-3" th:unless="${isLoggedIn}">
+                        <a class="nav-link" th:href="@{/login}">Logowanie</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:unless="${isLoggedIn}">
+                        <a th:href="@{/register}" class="btn btn-racing"><i class="bi bi-person-plus-fill me-1"></i> Dołącz do nas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<section>
+    <div class="container">
+
+        <a th:href="@{/tracks}" class="btn btn-outline-light rounded-pill px-4 py-2 mb-4 fw-bold" style="font-size: 0.85rem;">
+            <i class="bi bi-arrow-left me-2"></i> Powrót do bazy torów
+        </a>
+
+        <div class="text-center mb-5">
+            <h1 class="title-bebas text-white mb-2" style="font-size: 4rem;" th:text="${track.name}">NAZWA TORU</h1>
+            <h4 class="title-bebas text-accent" style="letter-spacing: 3px;">Tablice Wyników</h4>
+        </div>
+
+        <div class="glass-card mb-5 p-4 text-center border-top border-secondary mx-auto" style="max-width: 800px;">
+            <p th:if="${track.description != null}" th:text="${track.description}" class="fst-italic mb-0 text-light lh-lg"></p>
+            <p th:unless="${track.description != null}" class="text-white-50 fst-italic mb-0">Brak opisu dla tego toru.</p>
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-lg-6">
+                <div class="glass-card card-ac">
+                    <h3 class="title-bebas mb-3" style="color: #e63946;"><i class="bi bi-controller me-2"></i> Assetto Corsa</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead><tr><th style="width: 15%;">Poz</th><th class="text-start" style="width: 55%;">Kierowca</th><th style="width: 30%;">Czas</th></tr></thead>
+                            <tbody>
+                            <tr th:each="lap, iter : ${acTimes}">
+                                <td><span class="badge bg-dark border border-secondary text-white" th:text="'P' + ${iter.count}">P1</span></td>
+                                <td class="text-start fw-bold text-white">
+                                    <a th:href="@{/drivers/{id}(id=${lap.user.id})}" class="driver-link" th:text="${lap.user.nickname}">Nick</a>
+                                    <span th:if="${iter.count == 1}" class="badge ms-2" style="background: linear-gradient(45deg, #7209b7, #b5179e); border: 1px solid #f72585; box-shadow: 0 0 10px rgba(181, 23, 158, 0.5); cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Rekord Toru! Najszybsze okrążenie na tym torze w Assetto Corsa.">
+                                        <i class="bi bi-stopwatch-fill text-white"></i> REKORD
+                                    </span>
+                                </td>
+                                <td class="fw-bold font-monospace" th:classappend="${iter.count == 1} ? 'time-purple' : 'time-ac'" th:text="${lap.formattedTime}">1:00.000</td>
+                            </tr>
+                            <tr th:if="${acTimes.isEmpty()}">
+                                <td colspan="3" class="text-center text-white-50 py-4 fst-italic">Brak czasów. Bądź pierwszy!</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="glass-card card-evo">
+                    <h3 class="title-bebas mb-3" style="color: #9b5de5;"><i class="bi bi-controller me-2"></i> Assetto Corsa Evo</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead><tr><th style="width: 15%;">Poz</th><th class="text-start" style="width: 55%;">Kierowca</th><th style="width: 30%;">Czas</th></tr></thead>
+                            <tbody>
+                            <tr th:each="lap, iter : ${acEvoTimes}">
+                                <td><span class="badge bg-dark border border-secondary text-white" th:text="'P' + ${iter.count}">P1</span></td>
+                                <td class="text-start fw-bold text-white">
+                                    <a th:href="@{/drivers/{id}(id=${lap.user.id})}" class="driver-link" th:text="${lap.user.nickname}">Nick</a>
+                                    <span th:if="${iter.count == 1}" class="badge ms-2" style="background: linear-gradient(45deg, #7209b7, #b5179e); border: 1px solid #f72585; box-shadow: 0 0 10px rgba(181, 23, 158, 0.5); cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Rekord Toru! Najszybsze okrążenie na tym torze w Assetto Corsa Evo.">
+                                        <i class="bi bi-stopwatch-fill text-white"></i> REKORD
+                                    </span>
+                                </td>
+                                <td class="fw-bold font-monospace" th:classappend="${iter.count == 1} ? 'time-purple' : 'time-evo'" th:text="${lap.formattedTime}">1:00.000</td>
+                            </tr>
+                            <tr th:if="${acEvoTimes.isEmpty()}">
+                                <td colspan="3" class="text-center text-white-50 py-4 fst-italic">Brak czasów. Bądź pierwszy!</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="glass-card card-acc">
+                    <h3 class="title-bebas mb-3" style="color: #00bbf9;"><i class="bi bi-controller me-2"></i> AC Competizione</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead><tr><th style="width: 15%;">Poz</th><th class="text-start" style="width: 55%;">Kierowca</th><th style="width: 30%;">Czas</th></tr></thead>
+                            <tbody>
+                            <tr th:each="lap, iter : ${accTimes}">
+                                <td><span class="badge bg-dark border border-secondary text-white" th:text="'P' + ${iter.count}">P1</span></td>
+                                <td class="text-start fw-bold text-white">
+                                    <a th:href="@{/drivers/{id}(id=${lap.user.id})}" class="driver-link" th:text="${lap.user.nickname}">Nick</a>
+                                    <span th:if="${iter.count == 1}" class="badge ms-2" style="background: linear-gradient(45deg, #7209b7, #b5179e); border: 1px solid #f72585; box-shadow: 0 0 10px rgba(181, 23, 158, 0.5); cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Rekord Toru! Najszybsze okrążenie na tym torze w AC Competizione.">
+                                        <i class="bi bi-stopwatch-fill text-white"></i> REKORD
+                                    </span>
+                                </td>
+                                <td class="fw-bold font-monospace" th:classappend="${iter.count == 1} ? 'time-purple' : 'time-acc'" th:text="${lap.formattedTime}">1:00.000</td>
+                            </tr>
+                            <tr th:if="${accTimes.isEmpty()}">
+                                <td colspan="3" class="text-center text-white-50 py-4 fst-italic">Brak czasów. Bądź pierwszy!</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="glass-card card-ir">
+                    <h3 class="title-bebas mb-3" style="color: #fb5607;"><i class="bi bi-controller me-2"></i> iRacing</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead><tr><th style="width: 15%;">Poz</th><th class="text-start" style="width: 55%;">Kierowca</th><th style="width: 30%;">Czas</th></tr></thead>
+                            <tbody>
+                            <tr th:each="lap, iter : ${iracingTimes}">
+                                <td><span class="badge bg-dark border border-secondary text-white" th:text="'P' + ${iter.count}">P1</span></td>
+                                <td class="text-start fw-bold text-white">
+                                    <a th:href="@{/drivers/{id}(id=${lap.user.id})}" class="driver-link" th:text="${lap.user.nickname}">Nick</a>
+                                    <span th:if="${iter.count == 1}" class="badge ms-2" style="background: linear-gradient(45deg, #7209b7, #b5179e); border: 1px solid #f72585; box-shadow: 0 0 10px rgba(181, 23, 158, 0.5); cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Rekord Toru! Najszybsze okrążenie na tym torze w iRacing.">
+                                        <i class="bi bi-stopwatch-fill text-white"></i> REKORD
+                                    </span>
+                                </td>
+                                <td class="fw-bold font-monospace" th:classappend="${iter.count == 1} ? 'time-purple' : 'time-ir'" th:text="${lap.formattedTime}">1:00.000</td>
+                            </tr>
+                            <tr th:if="${iracingTimes.isEmpty()}">
+                                <td colspan="3" class="text-center text-white-50 py-4 fst-italic">Brak czasów. Bądź pierwszy!</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+
+</body>
+</html>

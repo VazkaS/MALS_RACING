@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalendarz Ligi | MALS Racing</title>
+
+    <link rel="icon" type="image/png" th:href="@{/photos/rect1.png}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* =========================================
+           1. BAZA I ESTETYKA
+           ========================================= */
+        :root { scroll-behavior: smooth; }
+        body {
+            background-color: #050505; color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        .text-accent { color: #e63946; }
+        .title-bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+
+        .video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; object-fit: cover; }
+        .video-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%); z-index: -1; }
+
+        /* =========================================
+           2. PŁYWAJĄCA NAWIGACJA
+           ========================================= */
+        .navbar-wrapper { position: fixed; top: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
+        .navbar-custom { width: 95%; max-width: 1400px; background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .brand-box { background-color: rgba(230, 57, 70, 0.9); display: inline-block; border-radius: 50px; padding: 5px 20px; transition: transform 0.2s; }
+        .brand-text { color: #ffffff !important; font-size: 1.1rem; font-weight: bold; margin: 0; text-transform: uppercase; font-family: 'Montserrat', sans-serif; }
+        .nav-link { color: #ccc !important; text-transform: uppercase; font-weight: bold; font-size: 0.85rem; letter-spacing: 1px; transition: 0.2s; margin: 0 12px; }
+        .nav-link:hover, .nav-link.active { color: #e63946 !important; }
+        .btn-racing { background-color: #e63946; color: white; font-weight: bold; text-transform: uppercase; border: none; padding: 8px 25px; border-radius: 50px; transition: 0.3s; font-size: 0.85rem;}
+        .btn-racing:hover { background-color: #b32a36; color: white;}
+
+        /* Role Badges */
+        .role-badge { display: inline-flex; align-items: center; padding: 8px 18px; border-radius: 50px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; font-size: 0.8rem; margin: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); }
+        .role-admin { background: linear-gradient(45deg, #8b0000, #ff4040); color: white; }
+        .role-driver { background: linear-gradient(45deg, #0b5ed7, #4da3ff); color: white; }
+
+        /* =========================================
+           3. KARTY I TABELE
+           ========================================= */
+        section { min-height: 100vh; padding: 140px 20px 80px 20px; }
+
+        .glass-card {
+            background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 20px;
+            padding: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .admin-panel { background: rgba(230, 57, 70, 0.1); border: 1px solid #e63946; border-radius: 15px; padding: 25px; margin-bottom: 40px; }
+
+
+        .form-label { color: #aaa; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .input-custom, .form-select { background: rgba(0,0,0,0.4) !important; border: 1px solid rgba(255,255,255,0.2); color: #fff !important; border-radius: 10px; padding: 12px 15px; transition: 0.3s; }
+        .input-custom:focus, .form-select:focus { border-color: #e63946; box-shadow: 0 0 10px rgba(230, 57, 70, 0.3); outline: none; }
+        .form-switch .form-check-input { width: 2.5em; height: 1.25em; cursor: pointer; }
+        .form-switch .form-check-input:checked { background-color: #e63946; border-color: #e63946; }
+
+
+        .table-custom { color: white; margin-bottom: 0; }
+        .table-custom th { border-bottom: 2px solid rgba(255,255,255,0.2) !important; background: transparent; color: #aaa; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; padding: 15px 10px; }
+        .table-custom td { border-bottom: 1px solid rgba(255,255,255,0.05) !important; background: transparent; vertical-align: middle; color: #ddd; padding: 15px 10px; }
+        .table-custom tbody tr { transition: background-color 0.2s; }
+        .table-custom tbody tr:hover { background-color: rgba(255,255,255,0.05); }
+
+        .btn-stats { border: 1px solid rgba(255,255,255,0.2); color: white; background: transparent; padding: 8px 20px; border-radius: 50px; font-size: 0.8rem; text-transform: uppercase; font-weight: bold; transition: 0.3s; text-decoration: none; display: inline-block; }
+        .btn-stats:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: #fff; }
+
+
+        .game-badge { padding: 5px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
+        .bg-ac { background: rgba(230, 57, 70, 0.2); color: #ff8b94; border-color: #e63946; }
+        .bg-acc { background: rgba(0, 187, 249, 0.2); color: #80d8ff; border-color: #00bbf9; }
+        .bg-evo { background: rgba(155, 93, 229, 0.2); color: #d4a5ff; border-color: #9b5de5; }
+        .bg-ir { background: rgba(251, 86, 7, 0.2); color: #ffb58a; border-color: #fb5607; }
+
+    </style>
+</head>
+<body>
+
+<video autoplay loop muted playsinline class="video-bg">
+    <source th:src="@{/videos/menu.webm}" type="video/webm">
+</video>
+<div class="video-overlay"></div>
+
+<div class="navbar-wrapper">
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="text-decoration-none d-flex align-items-center" th:href="@{/}">
+                <img th:src="@{/photos/rect1.png}" alt="Logo MALS" style="height: 25px; margin-right: 10px;">
+                <div class="brand-box"><span class="brand-text">MALS <span class="text-dark">Racing</span></span></div>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/seasons}">Sezony</a></li>
+                    <li class="nav-item"><a class="nav-link text-accent active" th:href="@{/races}">Kalendarz</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/drivers}">Kierowcy</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/tracks}">Tory</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3" th:if="${isLoggedIn}">
+                        <a class="nav-link text-accent" th:href="@{/profile}">Twój Profil</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:if="${isLoggedIn}">
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-racing"><i class="bi bi-power me-1"></i> Wyloguj</button>
+                        </form>
+                    </li>
+                    <li class="nav-item me-3" th:unless="${isLoggedIn}">
+                        <a class="nav-link" th:href="@{/login}">Logowanie</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:unless="${isLoggedIn}">
+                        <a th:href="@{/register}" class="btn btn-racing"><i class="bi bi-person-plus-fill me-1"></i> Dołącz do nas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<section>
+    <div class="container">
+
+        <div th:if="${isLoggedIn}" class="text-center mb-4">
+            <div th:if="${isGlobalAdmin}" class="role-badge role-admin">
+                <i class="bi bi-shield-lock-fill me-2"></i> Tryb Administratora
+            </div>
+            <div th:if="${isGlobalDriver}" class="role-badge role-driver">
+                <i class="bi bi-steering-wheel me-2"></i> Tryb Kierowcy
+            </div>
+        </div>
+
+        <div class="text-center mb-5">
+            <h1 class="title-bebas text-white" style="font-size: 5rem; line-height: 1;">KALENDARZ <span class="text-accent">WYŚCIGÓW</span></h1>
+            <p class="text-white-50 fw-bold">Sprawdź nadchodzące wydarzenia i historię startów w lidze MALS.</p>
+        </div>
+
+        <div style="max-width: 1000px; margin: 0 auto;">
+            <div th:if="${param.success}" class="alert alert-success rounded-3 mb-4 fw-bold border-0" style="background: rgba(0,255,100,0.1); color: #00ff64;">
+                <i class="bi bi-check-circle-fill me-2"></i> Wyścig został pomyślnie dodany do kalendarza!
+            </div>
+
+            <div th:if="${param.error != null}" class="alert alert-danger rounded-3 mb-4 fw-bold border-0" style="background: rgba(255,0,0,0.1); color: #e63946;">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span th:if="${param.error[0] == 'BrakUprawnien'}">Odmowa dostępu: Brak uprawnień do wykonania tej akcji.</span>
+                <span th:if="${param.error[0] == 'WyscigPrywatny'}">Odmowa dostępu: Ten wyścig jest prywatny lub w fazie testowej.</span>
+                <span th:unless="${param.error[0] == 'BrakUprawnien' or param.error[0] == 'WyscigPrywatny'}">Wystąpił błąd. Brak uprawnień.</span>
+            </div>
+        </div>
+
+        <div th:if="${isAdmin}" class="glass-card admin-panel" style="max-width: 1000px; margin: 0 auto 40px auto;">
+            <h3 class="title-bebas text-accent mb-4"><i class="bi bi-calendar-plus me-2"></i> Panel Administratora: Dodaj Nowy Wyścig</h3>
+
+            <form th:action="@{/races}" th:object="${newRace}" method="post" enctype="multipart/form-data">
+                <div class="row g-4">
+
+                    <div class="col-md-4">
+                        <label class="form-label">Sezon Ligi</label>
+                        <select th:field="*{seasonId}" class="form-select" required>
+                            <option value="">-- Wybierz Sezon --</option>
+                            <option th:each="season : ${seasons}" th:value="${season.id}" th:text="${season.name} + ' (' + ${season.year} + ')'"></option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Gra / Symulator</label>
+                        <select th:field="*{game}" class="form-select" required>
+                            <option value="">-- Wybierz Platformę --</option>
+                            <option value="Assetto Corsa">Assetto Corsa</option>
+                            <option value="Assetto Corsa Evo">Assetto Corsa Evo</option>
+                            <option value="Assetto Corsa Competizione">AC Competizione</option>
+                            <option value="iRacing">iRacing</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Tor Wyścigowy</label>
+                        <select th:field="*{trackId}" class="form-select" required>
+                            <option value="">-- Wybierz Tor z Bazy --</option>
+                            <option th:each="t : ${tracks}" th:value="${t.id}" th:text="${t.name}"></option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Data Startu</label>
+                        <input type="date" th:field="*{raceDate}" class="form-control input-custom" required />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Ilość Okrążeń</label>
+                        <input type="number" th:field="*{laps}" class="form-control input-custom" min="1" required placeholder="Np. 20" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Zdjęcie Promocyjne Toru (Opcjonalne)</label>
+                        <input type="file" th:field="*{image}" class="form-control input-custom" accept="image/*" />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Opis / Zasady Wyścigu</label>
+                        <textarea th:field="*{description}" class="form-control input-custom" rows="3" placeholder="Wpisz zasady, warunki pogodowe, hasło na serwer..."></textarea>
+                    </div>
+
+                    <div class="col-12 d-flex align-items-center justify-content-between mt-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" th:field="*{private}" id="privateSwitch">
+                            <label class="form-check-label text-white-50 fw-bold ms-2" for="privateSwitch" style="margin-top: 2px;">Wyścig Prywatny (Widoczny tylko dla adminów)</label>
+                        </div>
+                        <button type="submit" class="btn btn-racing"><i class="bi bi-calendar-check me-2"></i> ZAPLANUJ WYŚCIG</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <div class="glass-card mb-5" style="max-width: 1000px; margin: 0 auto; border-top: 4px solid #00e676;">
+            <h3 class="title-bebas mb-4" style="color: #00e676;"><i class="bi bi-calendar-event me-2"></i> Nadchodzące Wyścigi</h3>
+
+            <div class="table-responsive">
+                <table class="table table-custom text-center align-middle">
+                    <thead>
+                    <tr>
+                        <th style="width: 15%;">Data</th>
+                        <th style="width: 20%;">Gra</th>
+                        <th class="text-start" style="width: 35%;">Tor</th>
+                        <th style="width: 10%;">Laps</th>
+                        <th style="width: 20%;">Szczegóły</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="race : ${upcomingRaces}">
+                        <td class="fw-bold text-white-50" th:text="${race.raceDate}">Data</td>
+                        <td>
+                                <span class="game-badge"
+                                      th:classappend="${race.game == 'Assetto Corsa' ? 'bg-ac' : (race.game == 'Assetto Corsa Competizione' ? 'bg-acc' : (race.game == 'Assetto Corsa Evo' ? 'bg-evo' : 'bg-ir'))}"
+                                      th:text="${race.game}">Gra</span>
+                        </td>
+                        <td class="text-start">
+                            <span class="fw-bold text-white fs-6" th:text="${race.track.name}">Tor</span>
+                            <i th:if="${race.isPrivate()}" class="bi bi-lock-fill text-danger ms-2" title="Wyścig prywatny" data-bs-toggle="tooltip"></i>
+                        </td>
+                        <td class="font-monospace text-white-50" th:text="${race.laps}">10</td>
+                        <td>
+                            <a th:href="@{/races/{id}(id=${race.id})}" class="btn-stats" style="border-color: #00e676; color: #00e676;">
+                                Zobacz <i class="bi bi-arrow-right-short"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${upcomingRaces.isEmpty()}">
+                        <td colspan="5" class="text-center text-white-50 py-5 fst-italic">Aktualnie brak zaplanowanych wyścigów w kalendarzu.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glass-card" style="max-width: 1000px; margin: 0 auto; border-top: 4px solid #6c757d;">
+            <h3 class="title-bebas text-secondary mb-4"><i class="bi bi-archive-fill me-2"></i> Archiwum Wyścigów</h3>
+
+            <div class="table-responsive">
+                <table class="table table-custom text-center align-middle" style="opacity: 0.8;">
+                    <thead>
+                    <tr>
+                        <th style="width: 15%;">Data</th>
+                        <th style="width: 20%;">Gra</th>
+                        <th class="text-start" style="width: 35%;">Tor</th>
+                        <th style="width: 10%;">Laps</th>
+                        <th style="width: 20%;">Wyniki</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="race : ${pastRaces}">
+                        <td class="fw-bold text-white-50" th:text="${race.raceDate}">Data</td>
+                        <td><span class="badge bg-dark border border-secondary text-white-50" th:text="${race.game}">Gra</span></td>
+                        <td class="text-start">
+                            <span class="fw-bold text-secondary fs-6" th:text="${race.track.name}">Tor</span>
+                            <i th:if="${race.isPrivate()}" class="bi bi-lock-fill text-danger ms-2" title="Wyścig prywatny" data-bs-toggle="tooltip"></i>
+                        </td>
+                        <td class="font-monospace text-white-50" th:text="${race.laps}">10</td>
+                        <td>
+                            <a th:href="@{/races/{id}(id=${race.id})}" class="btn-stats">
+                                Sprawdź Wyniki
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${pastRaces.isEmpty()}">
+                        <td colspan="5" class="text-center text-white-50 py-5 fst-italic">Archiwum jest puste. Brak zakończonych wyścigów.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+
+</body>
+</html>

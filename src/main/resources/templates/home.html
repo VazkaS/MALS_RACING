@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paddock - Menedżer Ligi | MALS Racing</title>
+
+    <link rel="icon" type="image/png" th:href="@{/photos/rect1.png}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* =========================================
+           1. BAZA I STRUKTURA
+           ========================================= */
+        :root { scroll-behavior: smooth; }
+        body {
+            background-color: #050505; color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        .text-accent { color: #e63946; }
+        .title-bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+        /* Wideo w tle */
+        .video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; object-fit: cover; }
+        .video-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.9) 100%); z-index: -1; }
+
+        /* =========================================
+           2. PŁYWAJĄCA NAWIGACJA
+           ========================================= */
+        .navbar-wrapper { position: fixed; top: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
+        .navbar-custom { width: 95%; max-width: 1400px; background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .brand-box { background-color: rgba(230, 57, 70, 0.9); display: inline-block; border-radius: 50px; padding: 5px 20px; transition: transform 0.2s; }
+        .brand-box:hover { transform: scale(1.05); }
+        .brand-text { color: #ffffff !important; font-size: 1.1rem; font-weight: bold; margin: 0; text-transform: uppercase; font-family: 'Montserrat', sans-serif; }
+        .nav-link { color: #ccc !important; text-transform: uppercase; font-weight: bold; font-size: 0.85rem; letter-spacing: 1px; transition: 0.2s; margin: 0 12px; }
+        .nav-link:hover, .nav-link.active { color: #e63946 !important; }
+        .btn-racing { background-color: #e63946; color: white; font-weight: bold; text-transform: uppercase; border: none; padding: 8px 25px; border-radius: 50px; transition: 0.3s; font-size: 0.85rem;}
+        .btn-racing:hover { background-color: #b32a36; transform: scale(1.05); color: white;}
+
+        /* =========================================
+           3. INTRO (ŚWIATŁA STARTOWE F1)
+           ========================================= */
+        #lights-intro {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 99999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.6s ease-out;
+        }
+        .lights-box { display: flex; gap: 4vw; }
+        .light-column { display: flex; flex-direction: column; }
+        .light-bulb {
+            width: 18vw; height: 18vw; max-width: 250px; max-height: 250px; min-width: 80px; min-height: 80px;
+            border-radius: 50%; background-color: #111; position: relative; overflow: hidden;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.08) 25%, transparent 35%); background-size: 8px 8px;
+            box-shadow: inset 0 0 35px #000;
+        }
+        .light-bulb::after {
+            content: ''; position: absolute; top: 5%; left: 10%; width: 80%; height: 30%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.15), transparent); border-radius: 50%; pointer-events: none;
+        }
+        .light-bulb.red {
+            background-color: #e60000; background-image: radial-gradient(circle, #ffffff 30%, transparent 40%);
+            box-shadow: 0 0 50px rgba(255, 0, 0, 1), 0 0 120px rgba(255, 0, 0, 0.7), 0 0 200px rgba(255, 0, 0, 0.4), inset 0 0 40px #800000;
+        }
+
+        /* =========================================
+           4. SEKCJE I ANIMACJE
+           ========================================= */
+        section { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 100px 20px; position: relative; }
+        .glass-card { background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 3rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); transform-style: preserve-3d; transition: 0.3s; }
+        .glass-card-top-red { border-top: 4px solid #e63946; }
+        .glass-inner { transform: translateZ(30px); }
+
+        .reveal { opacity: 0; transform: translateY(50px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        .role-badge { display: inline-flex; align-items: center; padding: 10px 20px; border-radius: 50px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; font-size: 0.9rem; margin: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); }
+        .role-admin { background: linear-gradient(45deg, #8b0000, #ff4040); color: white; }
+        .role-driver { background: linear-gradient(45deg, #0b5ed7, #4da3ff); color: white; }
+
+        @media (max-width: 991px) {
+            .navbar-custom { border-radius: 20px; padding: 15px; }
+            .navbar-collapse { background: rgba(10,10,10,0.95); padding: 20px; border-radius: 15px; margin-top: 15px; }
+        }
+
+        /* Panel audio przyklejony do rogu */
+        .audio-control-panel {
+            position: fixed; bottom: 20px; right: 20px; z-index: 2000;
+            background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(10px);
+            padding: 10px 15px; border-radius: 50px; display: flex; align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="lights-intro">
+    <div class="lights-box">
+        <div class="light-column"><div class="light-bulb" id="l1"></div></div>
+        <div class="light-column"><div class="light-bulb" id="l2"></div></div>
+        <div class="light-column"><div class="light-bulb" id="l3"></div></div>
+        <div class="light-column"><div class="light-bulb" id="l4"></div></div>
+        <div class="light-column"><div class="light-bulb" id="l5"></div></div>
+    </div>
+</div>
+
+<video autoplay loop muted playsinline class="video-bg">
+    <source src="/videos/menu.webm" type="video/webm">
+</video>
+<div class="video-overlay"></div>
+
+<div class="navbar-wrapper">
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="text-decoration-none d-flex align-items-center" href="#home">
+                <img th:src="@{/photos/rect1.png}" alt="Logo MALS" style="height: 25px; margin-right: 10px;">
+                <div class="brand-box"><span class="brand-text">MALS <span class="text-dark">Racing</span></span></div>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link text-accent" th:href="@{/seasons}">Sezony</a></li>
+                    <li class="nav-item"><a class="nav-link text-accent" th:href="@{/races}">Kalendarz</a></li>
+                    <li class="nav-item"><a class="nav-link text-accent" th:href="@{/drivers}">Kierowcy</a></li>
+                    <li class="nav-item"><a class="nav-link text-accent" th:href="@{/tracks}">Tory</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3" th:if="${isLoggedIn}">
+                        <a class="nav-link text-accent" th:href="@{/profile}">Twój Profil</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:if="${isLoggedIn}">
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-racing"><i class="bi bi-power me-1"></i> Wyloguj</button>
+                        </form>
+                    </li>
+
+                    <li class="nav-item me-3" th:unless="${isLoggedIn}">
+                        <a class="nav-link" th:href="@{/login}">Logowanie</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:unless="${isLoggedIn}">
+                        <a th:href="@{/register}" class="btn btn-racing"><i class="bi bi-person-plus-fill me-1"></i> Dołącz do nas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<section id="home">
+    <div class="container text-center reveal">
+        <div th:if="${isLoggedIn}" class="mb-4">
+            <div th:if="${isGlobalAdmin}" class="role-badge role-admin">
+                <i class="bi bi-shield-lock-fill me-2 fs-5"></i> Tryb Administratora
+            </div>
+
+            <div th:if="${isGlobalDriver}" class="role-badge role-driver">
+                <i class="bi bi-steering-wheel me-2 fs-5"></i> Tryb Kierowcy
+            </div>
+        </div>
+
+        <h1 class="title-bebas" style="font-size: 7.5rem; line-height: 0.9;">WITAJ W <span class="text-accent">MALS</span></h1>
+        <p class="lead text-white-50 mt-3 mb-5 fw-bold mx-auto" style="max-width: 800px;">
+            Odkryj kompletne środowisko MALS: profesjonalnie zarządzane ligi, zaawansowane statystyki kierowców i emocjonujące wyścigi sezonowe. Dołącz do rosnącej społeczności i zobacz, dlaczego kierowcy wybierają MALS.
+        </p>
+
+        <a href="#about" class="btn btn-outline-light rounded-pill px-5 py-3 mt-4 fw-bold text-uppercase" style="border-width: 2px;">
+            Dowiedz się więcej <i class="bi bi-chevron-down ms-2"></i>
+        </a>
+    </div>
+</section>
+
+<section id="about" style="background: linear-gradient(0deg, rgba(10,10,10,1) 0%, rgba(10,10,10,0) 100%);">
+    <div class="container reveal">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4">
+                <h2 class="title-bebas text-accent" style="font-size: 5rem;">Kim Jesteśmy?</h2>
+                <h4 class="fw-bold mb-4">MALS Racing to więcej niż tylko wirtualne ściganie.</h4>
+                <p class="text-white-50 text-justify" style="line-height: 1.8;">
+                    Jesteśmy pasjonatami motorsportu, dla których zapach wirtualnych opon i ułamki sekund na stoperze to codzienność. Nasza liga skupia kierowców o różnym poziomie umiejętności.
+                </p>
+                <p class="text-white-50 text-justify" style="line-height: 1.8;">
+                    Zapewniamy profesjonalną organizację, sędziowanie na najwyższym poziomie i atmosferę, której nie znajdziesz nigdzie indziej. Ścigamy się czysto, twardo i zawsze z szacunkiem do rywala.
+                </p>
+            </div>
+            <div class="col-lg-6">
+                <div class="glass-card glass-card-top-red text-center p-5" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+                    <div class="row glass-inner">
+                        <div class="col-6 mb-4">
+                            <h3 class="title-bebas text-accent fs-1"><span class="counter" data-target="5">0</span>+</h3>
+                            <p class="small text-uppercase fw-bold text-white-50">Lat Doświadczenia</p>
+                        </div>
+                        <div class="col-6 mb-4">
+                            <h3 class="title-bebas text-accent fs-1"><span class="counter" data-target="90">0</span>+</h3>
+                            <p class="small text-uppercase fw-bold text-white-50">Aktywnych Kierowców</p>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="title-bebas text-accent fs-1"><span class="counter" data-target="150">0</span>+</h3>
+                            <p class="small text-uppercase fw-bold text-white-50">Rozegranych Wyścigów</p>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="title-bebas text-accent fs-1"><span class="counter" data-target="4">0</span></h3>
+                            <p class="small text-uppercase fw-bold text-white-50">Symulatory</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="partners" style="background-color: rgba(10,10,10,1);">
+    <div class="container text-center reveal">
+        <h2 class="title-bebas" style="font-size: 5rem;">Nasi <span class="text-accent">Partnerzy</span></h2>
+        <p class="lead text-white-50 mb-5">Dzięki nim nasza liga może się rozwijać.</p>
+
+        <div class="row justify-content-center gap-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="glass-card py-5 px-4 h-100" data-tilt data-tilt-scale="1.05">
+                    <div class="glass-inner">
+                        <i class="bi bi-controller text-white-50" style="font-size: 4rem;"></i>
+                        <h5 class="mt-3 fw-bold">SimGear Pro</h5>
+                        <p class="text-white-50 small mt-2 mb-0">Profesjonalny sprzęt simracingowy na najwyższym poziomie.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="glass-card py-5 px-4 h-100" data-tilt data-tilt-scale="1.05">
+                    <div class="glass-inner">
+                        <i class="bi bi-display text-white-50" style="font-size: 4rem;"></i>
+                        <h5 class="mt-3 fw-bold">MonitorX</h5>
+                        <p class="text-white-50 small mt-2 mb-0">Monitory gamingowe zapewniające maksymalną immersję.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="glass-card py-5 px-4 h-100" data-tilt data-tilt-scale="1.05">
+                    <div class="glass-inner">
+                        <i class="bi bi-speedometer text-white-50" style="font-size: 4rem;"></i>
+                        <h5 class="mt-3 fw-bold">Telemetry.io</h5>
+                        <p class="text-white-50 small mt-2 mb-0">Zaawansowana analiza telemetrii dla poprawy Twojego tempa.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="contact" style="background: linear-gradient(180deg, rgba(10,10,10,1) 0%, rgba(5,5,5,1) 100%);">
+    <div class="container reveal">
+        <div class="glass-card glass-card-top-red mx-auto" style="max-width: 800px;">
+            <div class="glass-inner">
+                <div class="text-center mb-5">
+                    <h2 class="title-bebas" style="font-size: 4rem;">Dołącz do <span class="text-accent">Dyskusji</span></h2>
+                    <p class="text-white-50">Masz pytania? Chcesz dołączyć do ligi? Znajdź nas na Discordzie.</p>
+                </div>
+
+                <div class="row text-center">
+                    <div class="col-md-6 mb-4">
+                        <div class="p-4 border border-secondary rounded-4 bg-dark h-100 transition-hover" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#5865F2'" onmouseout="this.style.borderColor='var(--bs-secondary)'">
+                            <i class="bi bi-discord" style="color: #5865F2; font-size: 3rem;"></i>
+                            <h4 class="mt-3 fw-bold">Nasz Discord</h4>
+                            <p class="text-white-50 small">Główne centrum komunikacji.</p>
+                            <a href="#" class="btn btn-outline-light rounded-pill px-4 mt-2">Dołącz</a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="p-4 border border-secondary rounded-4 bg-dark h-100" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#e63946'" onmouseout="this.style.borderColor='var(--bs-secondary)'">
+                            <i class="bi bi-envelope-at text-accent" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3 fw-bold">Napisz do nas</h4>
+                            <p class="text-white-50 small">kontakt@malsracing.pl</p>
+                            <a href="mailto:kontakt@malsracing.pl" class="btn btn-outline-light rounded-pill px-4 mt-2">Wyślij Maila</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const introOverlay = document.getElementById('lights-intro');
+        if (!sessionStorage.getItem('introPlayed')) {
+            const lights = [ document.getElementById('l1'), document.getElementById('l2'), document.getElementById('l3'), document.getElementById('l4'), document.getElementById('l5') ];
+            lights.forEach((light, index) => { setTimeout(() => { light.classList.add('red'); }, (index + 1) * 400); });
+            setTimeout(() => {
+                lights.forEach(light => light.classList.remove('red'));
+                setTimeout(() => { introOverlay.style.opacity = '0'; setTimeout(() => { introOverlay.style.display = 'none'; }, 600); }, 200);
+            }, 2800);
+            sessionStorage.setItem('introPlayed', 'true');
+        } else {
+            introOverlay.style.display = 'none';
+        }
+
+
+        const counters = document.querySelectorAll('.counter');
+        let countersActivated = false;
+        function reveal() {
+            var reveals = document.querySelectorAll(".reveal");
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                if (elementTop < windowHeight - 150) {
+                    reveals[i].classList.add("active");
+                    if (reveals[i].id === 'about' || reveals[i].querySelector('.counter')) {
+                        if (!countersActivated) {
+                            counters.forEach(counter => {
+                                const updateCount = () => {
+                                    const target = +counter.getAttribute('data-target');
+                                    const count = +counter.innerText;
+                                    const speed = 200;
+                                    const inc = target / speed;
+                                    if (count < target) { counter.innerText = Math.ceil(count + inc); setTimeout(updateCount, 15); }
+                                    else { counter.innerText = target; }
+                                };
+                                updateCount();
+                            });
+                            countersActivated = true;
+                        }
+                    }
+                }
+            }
+        }
+        window.addEventListener("scroll", reveal);
+        reveal();
+
+
+    });
+</script>
+
+</body>
+</html>

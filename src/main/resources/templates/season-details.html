@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Klasyfikacja Generalna - ' + ${season.name} + ' | MALS Racing'">Klasyfikacja Generalna</title>
+
+    <link rel="icon" type="image/png" th:href="@{/photos/rect1.png}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* =========================================
+           1. BAZA I ESTETYKA
+           ========================================= */
+        :root { scroll-behavior: smooth; }
+        body {
+            background-color: #050505; color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        .text-accent { color: #e63946; }
+        .title-bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+
+        .video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; object-fit: cover; }
+        .video-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%); z-index: -1; }
+
+        /* =========================================
+           2. PŁYWAJĄCA NAWIGACJA
+           ========================================= */
+        .navbar-wrapper { position: fixed; top: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
+        .navbar-custom { width: 95%; max-width: 1400px; background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .brand-box { background-color: rgba(230, 57, 70, 0.9); display: inline-block; border-radius: 50px; padding: 5px 20px; transition: transform 0.2s; }
+        .brand-text { color: #ffffff !important; font-size: 1.1rem; font-weight: bold; margin: 0; text-transform: uppercase; font-family: 'Montserrat', sans-serif; }
+        .nav-link { color: #ccc !important; text-transform: uppercase; font-weight: bold; font-size: 0.85rem; letter-spacing: 1px; transition: 0.2s; margin: 0 12px; }
+        .nav-link:hover, .nav-link.active { color: #e63946 !important; }
+        .btn-racing { background-color: #e63946; color: white; font-weight: bold; text-transform: uppercase; border: none; padding: 8px 25px; border-radius: 50px; transition: 0.3s; font-size: 0.85rem;}
+        .btn-racing:hover { background-color: #b32a36; color: white;}
+
+        /* =========================================
+           3. KARTY, TABELE, BANERY
+           ========================================= */
+        section { min-height: 100vh; padding: 140px 20px 80px 20px; }
+
+        .glass-card {
+            background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 20px;
+            padding: 1.5rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); height: 100%;
+        }
+
+
+        .card-ac { border-top: 4px solid #e63946; }
+        .card-evo { border-top: 4px solid #9b5de5; }
+        .card-acc { border-top: 4px solid #00bbf9; }
+        .card-ir { border-top: 4px solid #fb5607; }
+
+
+        .table-custom { color: white; margin-bottom: 0; }
+        .table-custom th { border-bottom: 2px solid rgba(255,255,255,0.2) !important; background: transparent; color: #aaa; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; padding: 15px 10px; }
+        .table-custom td { border-bottom: 1px solid rgba(255,255,255,0.05) !important; background: transparent; vertical-align: middle; color: #ddd; padding: 10px; }
+        .table-custom tbody tr { transition: background-color 0.2s; }
+        .table-custom tbody tr:hover { background-color: rgba(255,255,255,0.05); }
+
+
+        .season-banner {
+            width: 100%; height: 250px; object-fit: cover; border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
+        }
+
+
+        .admin-warning-panel { background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 15px; padding: 25px; margin-bottom: 30px; }
+        .archived-panel { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 15px; padding: 25px; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+
+<video autoplay loop muted playsinline class="video-bg">
+    <source th:src="@{/videos/menu.webm}" type="video/webm">
+</video>
+<div class="video-overlay"></div>
+
+<div class="navbar-wrapper">
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="text-decoration-none d-flex align-items-center" th:href="@{/}">
+                <img th:src="@{/photos/rect1.png}" alt="Logo MALS" style="height: 25px; margin-right: 10px;">
+                <div class="brand-box"><span class="brand-text">MALS <span class="text-dark">Racing</span></span></div>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link text-accent active" th:href="@{/seasons}">Sezony</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/races}">Kalendarz</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/drivers}">Kierowcy</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/tracks}">Tory</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3" th:if="${isLoggedIn}">
+                        <a class="nav-link text-accent" th:href="@{/profile}">Twój Profil</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:if="${isLoggedIn}">
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-racing"><i class="bi bi-power me-1"></i> Wyloguj</button>
+                        </form>
+                    </li>
+                    <li class="nav-item me-3" th:unless="${isLoggedIn}">
+                        <a class="nav-link" th:href="@{/login}">Logowanie</a>
+                    </li>
+                    <li class="nav-item mt-2 mt-lg-0" th:unless="${isLoggedIn}">
+                        <a th:href="@{/register}" class="btn btn-racing"><i class="bi bi-person-plus-fill me-1"></i> Dołącz do nas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<section>
+    <div class="container" style="max-width: 1200px;">
+
+        <a th:href="@{/seasons}" class="btn btn-outline-light rounded-pill px-4 py-2 mb-4 fw-bold" style="font-size: 0.85rem;">
+            <i class="bi bi-arrow-left me-2"></i> Powrót do Sezonów
+        </a>
+
+        <div class="text-center mb-5">
+            <h4 class="title-bebas text-accent mb-1" style="letter-spacing: 3px;">KLASYFIKACJA GENERALNA</h4>
+            <h1 class="title-bebas text-white mb-2" style="font-size: 4rem;">
+                <span th:text="${season.name}">SEZON</span>
+                <span class="text-white-50 ms-2">(<span th:text="${season.year}">ROK</span>)</span>
+            </h1>
+            <p class="text-white-50 fw-bold">Punkty są sumowane automatycznie na podstawie rozegranych (zakończonych) wyścigów.</p>
+        </div>
+
+        <div th:if="${season.backgroundImage != null}" class="mb-5 text-center">
+            <img th:src="'data:image/jpeg;base64,' + ${season.backgroundImage}" class="season-banner" alt="Baner Sezonu" />
+        </div>
+
+        <div th:if="${param.success != null && param.success[0] == 'SezonZakonczony'}" class="alert alert-success rounded-3 mb-4 fw-bold border-0 text-center mx-auto" style="background: rgba(0,255,100,0.1); color: #00ff64; max-width: 700px;">
+            <i class="bi bi-check-circle-fill me-2"></i> Pomyślnie przeniesiono sezon do Archiwum! Mistrzostwa uznaje się za zakończone.
+        </div>
+        <div th:if="${param.success != null && param.success[0] == 'SezonAktywowany'}" class="alert alert-info rounded-3 mb-4 fw-bold border-0 text-center mx-auto" style="background: rgba(0, 187, 249, 0.1); color: #00bbf9; max-width: 700px;">
+            <i class="bi bi-play-circle-fill me-2"></i> Event został pomyślnie aktywowany i jest teraz widoczny na liście trwających!
+        </div>
+
+        <div th:if="${isAdmin && !season.archived}" class="admin-warning-panel mx-auto" style="max-width: 800px;">
+
+            <div th:if="${season.active}" class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h4 class="title-bebas mb-2" style="color: #ffc107;"><i class="bi bi-exclamation-triangle-fill me-2"></i> Zarządzanie Sezonem</h4>
+                    <p class="mb-0 text-white-50 small fw-bold">Zakończenie sezonu przeniesie go do archiwum i zablokuje dodawanie nowych wyników. <br> Tej operacji nie można cofnąć.</p>
+                </div>
+                <form th:action="@{/seasons/{id}/archive(id=${season.id})}" method="post" onsubmit="return confirm('Czy na pewno chcesz zakończyć ten sezon? Tej operacji nie można cofnąć.');" class="m-0">
+                    <button type="submit" class="btn btn-danger fw-bold rounded-pill px-4 text-uppercase">
+                        <i class="bi bi-flag-fill me-2"></i> Zakończ Sezon
+                    </button>
+                </form>
+            </div>
+
+            <div th:unless="${season.active}" class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h4 class="title-bebas mb-2" style="color: #00bbf9;"><i class="bi bi-play-circle-fill me-2"></i> Uruchom Event</h4>
+                    <p class="mb-0 text-white-50 small fw-bold">Ten sezon czeka w kolejce 'Upcoming'. Kliknij przycisk, aby uruchomić go ręcznie (np. jako in-season event).</p>
+                </div>
+                <form th:action="@{/seasons/{id}/activate(id=${season.id})}" method="post" onsubmit="return confirm('Aktywować ten event? Pojawi się w sekcji Trwające.');" class="m-0">
+                    <button type="submit" class="btn btn-info fw-bold rounded-pill px-4 text-uppercase text-dark" style="background-color: #00bbf9; border-color: #00bbf9;">
+                        <i class="bi bi-play-fill me-2"></i> Aktywuj Event
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div th:if="${season.archived}" class="archived-panel text-center mx-auto" style="max-width: 800px;">
+            <h4 class="title-bebas text-white mb-2"><i class="bi bi-lock-fill me-2 text-white-50"></i> SEZON ARCHIWALNY (ZAKOŃCZONY)</h4>
+            <p class="mb-0 text-white-50 fst-italic">Mistrzostwa w ramach tego sezonu dobiegły końca. Prezentowane wyniki są ostateczne i nie ulegną zmianie.</p>
+        </div>
+
+        <div class="row g-4 mt-2">
+
+            <div class="col-lg-6">
+                <div class="glass-card card-ac">
+                    <h3 class="title-bebas mb-4" style="color: #e63946;"><i class="bi bi-trophy-fill me-2"></i> Assetto Corsa</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead><tr><th style="width: 15%;">Poz</th><th class="text-start" style="width: 55%;">Kierowca</th><th style="width: 30%;">Punkty</th></tr></thead>
+                            <tbody>
+                            <tr th:each="standing, iter : ${acStandings}">
+                                <td><span class="badge bg-dark border border-secondary text-white" th:text="'P' + ${iter.count}">P1</span></td>
+                                <td class="text-start">
+                                    <a th:href="@{/drivers/{id}(id=${standing.user.id})}" class="text-white text-decoration-none fw-bold hover-accent" style="transition: 0.2s;" onmouseover="this.style.color='#e63946'" onmouseout="this.style.color='white'" th:text="${standing.user.nickname}">Nick</a>
+                                </td>
+                                <td class="fw-bold fs-4" style="color: #e63946;" th:text="${standing.totalPoints}">25</td>
+                            </tr>
+                            <tr th:if="${acStandings.isEmpty()}">
+                                <td colspan="3" class="text-center text-white-50 py-4 fst-italic">Brak rozegranych wyścigów w tej klasie.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="glass-card card-evo">
+                    <h3 class="title-bebas mb-4" style="color: #9b5de5;"><i class="bi bi-trophy-fill me-2"></i> Assetto Corsa Evo</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead><tr><th style="width: 15%;">Poz</th><th class="text-start" style="width: 55%;">Kierowca</th><th style="width: 30%;">Punkty</th></tr></thead>
+                            <tbody>
+                            <tr th:each="standing, iter : ${acEvoStandings}">
+                                <td><span class="badge bg-dark border border-secondary text-white" th:text="'P' + ${iter.count}">P1</span></td>
+                                <td class="text-start">
+                                    <a th:href="@{/drivers/{id}(id=${standing.user.id})}" class="text-white text-decoration-none fw-bold hover-accent" style="transition: 0.2s;" onmouseover="this.style.color='#9b5de5'" onmouseout="this.style.color='white'" th:text="${standing.user.nickname}">Nick</a>
+                                </td>
+                                <td class="fw-bold fs-4" style="color: #9b5de5;" th:text="${standing.totalPoints}">25</td>
+                            </tr>
+                            <tr th:if="${acEvoStandings.isEmpty()}">
+                                <td colspan="3" class="text-center text-white-50 py-4 fst-italic">Brak rozegranych wyścigów w tej klasie.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="glass-card card-acc">
+                    <h3 class="title-bebas mb-4" style="color: #00bbf9;"><i class="bi bi-trophy-fill me-2"></i> AC Competizione</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead><tr><th style="width: 15%;">Poz</th><th class="text-start" style="width: 55%;">Kierowca</th><th style="width: 30%;">Punkty</th></tr></thead>
+                            <tbody>
+                            <tr th:each="standing, iter : ${accStandings}">
+                                <td><span class="badge bg-dark border border-secondary text-white" th:text="'P' + ${iter.count}">P1</span></td>
+                                <td class="text-start">
+                                    <a th:href="@{/drivers/{id}(id=${standing.user.id})}" class="text-white text-decoration-none fw-bold hover-accent" style="transition: 0.2s;" onmouseover="this.style.color='#00bbf9'" onmouseout="this.style.color='white'" th:text="${standing.user.nickname}">Nick</a>
+                                </td>
+                                <td class="fw-bold fs-4" style="color: #00bbf9;" th:text="${standing.totalPoints}">25</td>
+                            </tr>
+                            <tr th:if="${accStandings.isEmpty()}">
+                                <td colspan="3" class="text-center text-white-50 py-4 fst-italic">Brak rozegranych wyścigów w tej klasie.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="glass-card card-ir">
+                    <h3 class="title-bebas mb-4" style="color: #fb5607;"><i class="bi bi-trophy-fill me-2"></i> iRacing</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom text-center align-middle">
+                            <thead><tr><th style="width: 15%;">Poz</th><th class="text-start" style="width: 55%;">Kierowca</th><th style="width: 30%;">Punkty</th></tr></thead>
+                            <tbody>
+                            <tr th:each="standing, iter : ${iracingStandings}">
+                                <td><span class="badge bg-dark border border-secondary text-white" th:text="'P' + ${iter.count}">P1</span></td>
+                                <td class="text-start">
+                                    <a th:href="@{/drivers/{id}(id=${standing.user.id})}" class="text-white text-decoration-none fw-bold hover-accent" style="transition: 0.2s;" onmouseover="this.style.color='#fb5607'" onmouseout="this.style.color='white'" th:text="${standing.user.nickname}">Nick</a>
+                                </td>
+                                <td class="fw-bold fs-4" style="color: #fb5607;" th:text="${standing.totalPoints}">25</td>
+                            </tr>
+                            <tr th:if="${iracingStandings.isEmpty()}">
+                                <td colspan="3" class="text-center text-white-50 py-4 fst-italic">Brak rozegranych wyścigów w tej klasie.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

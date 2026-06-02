@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Wyniki: ' + ${race.track.name} + ' | MALS Racing'">Wprowadzanie Wyników</title>
+
+    <link rel="icon" type="image/png" th:href="@{/photos/rect1.png}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        .table-custom tbody tr td span.fw-bold {
+            color: #ffffff !important;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        :root { scroll-behavior: smooth; }
+        body { background-color: #050505; color: #ffffff; font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+        .text-accent { color: #e63946; }
+        .title-bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+        .video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; object-fit: cover; }
+        .video-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.95) 100%); z-index: -1; }
+
+        section { padding: 100px 20px 80px 20px; }
+        .glass-card { background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 2.5rem; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+
+        /* =========================================
+           TABELA SĘDZIOWSKA
+           ========================================= */
+        .table-custom { color: #ffffff; border-collapse: separate; border-spacing: 0 8px; margin-top: -8px;}
+
+        .table-custom th {
+            background-color: transparent !important;
+            color: #aaaaaa;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            border: none !important;
+            padding-bottom: 12px;
+            text-align: center;
+        }
+
+        .table-custom td {
+            background-color: transparent !important;
+            border: none !important;
+            vertical-align: middle;
+            padding: 15px;
+        }
+
+        .table-custom tbody tr { background-color: rgba(0, 0, 0, 0.6) !important; transition: 0.2s; }
+        .table-custom tbody tr:nth-child(even) { background-color: rgba(0, 0, 0, 0.8) !important; }
+        .table-custom tbody tr:hover { background-color: rgba(230, 57, 70, 0.1) !important; }
+
+        .table-custom tbody tr td:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-left: 3px solid transparent; }
+        .table-custom tbody tr:hover td:first-child { border-left: 3px solid #e63946; }
+        .table-custom tbody tr td:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+
+        /* =========================================
+           INPUTY W TABELI
+           ========================================= */
+        .form-control {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            text-align: center;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control::placeholder { color: rgba(255,255,255,0.2); font-weight: 400; }
+
+        .form-control:focus {
+            background-color: rgba(0, 0, 0, 0.8);
+            border-color: #e63946;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(230, 57, 70, 0.3);
+        }
+
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .form-check-input { cursor: pointer; }
+        .form-check-input:checked { background-color: #e63946; border-color: #e63946; box-shadow: 0 0 10px rgba(230, 57, 70, 0.5); }
+        .form-check-input:focus { box-shadow: 0 0 0 0.25rem rgba(230, 57, 70, 0.25); border-color: #e63946; }
+
+        .btn-success-glow {
+            background-color: #198754; color: white; padding: 15px 30px; border-radius: 50px;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border: none; transition: 0.3s;
+        }
+        .btn-success-glow:hover { background-color: #146c43; color: white; box-shadow: 0 0 20px rgba(25, 135, 84, 0.6); transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+<video autoplay loop muted playsinline class="video-bg"><source th:src="@{/videos/menu.webm}" type="video/webm"></video>
+<div class="video-overlay"></div>
+
+<section>
+    <div class="container" style="max-width: 1200px;">
+        <a th:href="@{/races/{id}(id=${race.id})}" class="btn btn-outline-light rounded-pill px-4 mb-4">
+            <i class="bi bi-arrow-left me-2"></i> Powrót do szczegółów
+        </a>
+
+        <div class="glass-card">
+            <div class="mb-5 border-bottom border-secondary border-opacity-25 pb-3 d-flex justify-content-between align-items-end flex-wrap gap-3">
+                <div>
+                    <h1 class="title-bebas text-white mb-1"><i class="bi bi-flag-fill text-accent me-2"></i> Panel Sędziowski</h1>
+                    <h3 class="text-white-50 fw-bold m-0" th:text="${race.track.name}">Tor</h3>
+                </div>
+                <div class="text-end" style="max-width: 400px;">
+                    <p class="text-white-50 small mb-0 lh-sm">Wprowadź oficjalne wyniki kierowców. Po zatwierdzeniu wyścig trafi do Archiwum, a czasy zasilą zestawienia Hotlapów.</p>
+                </div>
+            </div>
+
+            <div th:if="${formDto.entries.isEmpty()}" class="p-5 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-4 text-center">
+                <i class="bi bi-cone-striped text-danger fs-1 mb-3 d-block"></i>
+                <h4 class="text-danger fw-bold mb-3">Brak zapisanych kierowców</h4>
+                <p class="text-white-50 mb-4">Wygląda na to, że nikt nie wystartował w tym wyścigu. Możesz go zamknąć, aby przenieść go do archiwum jako "pustą" rundę.</p>
+                <form th:action="@{/races/{id}/results(id=${race.id})}" th:object="${formDto}" method="post">
+                    <button type="submit" class="btn btn-outline-danger rounded-pill px-5 fw-bold text-uppercase">Zamknij "Pusty" Wyścig</button>
+                </form>
+            </div>
+
+            <form th:unless="${formDto.entries.isEmpty()}" th:action="@{/races/{id}/results(id=${race.id})}" th:object="${formDto}" method="post">
+                <div class="table-responsive mb-5" style="overflow-x: auto;">
+                    <table class="table table-custom align-middle mb-0" style="min-width: 900px;">
+                        <thead>
+                        <tr>
+                            <th class="text-start ps-4" style="width: 20%;">Kierowca</th>
+                            <th style="width: 12%;">Poz. Końcowa</th>
+                            <th style="width: 38%;">Najlepszy Czas</th>
+                            <th style="width: 18%;">Kara / Uwagi</th>
+                            <th style="width: 12%;">DNF</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="entry, stat : *{entries}">
+                            <input type="hidden" th:field="*{entries[__${stat.index}__].userId}" />
+                            <input type="hidden" th:field="*{entries[__${stat.index}__].nickname}" />
+
+                            <td class="text-start ps-4">
+                                <span class="fw-bold fs-5" th:text="${entry.nickname}">Nick</span>
+                            </td>
+
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <div class="position-relative" style="width: 80px;">
+                                        <span class="position-absolute top-50 start-0 translate-middle-y ms-2 text-white-50 fw-bold small">P</span>
+                                        <input type="number" th:field="*{entries[__${stat.index}__].position}" class="form-control ps-4" min="1" placeholder="-" required/>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <input type="number" th:field="*{entries[__${stat.index}__].min}" class="form-control" style="width: 70px;" min="0" placeholder="Min"/>
+                                    <span class="text-white-50 fw-bold">:</span>
+                                    <input type="number" th:field="*{entries[__${stat.index}__].sec}" class="form-control" style="width: 70px;" min="0" max="59" placeholder="Sek"/>
+                                    <span class="text-white-50 fw-bold fs-5">.</span>
+                                    <input type="number" th:field="*{entries[__${stat.index}__].ms}" class="form-control" style="width: 80px;" min="0" max="999" placeholder="Ms"/>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <input type="text" th:field="*{entries[__${stat.index}__].penalty}" class="form-control text-warning" style="width: 110px;" placeholder="np. +5s"/>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="form-check form-switch d-flex justify-content-center m-0">
+                                    <input class="form-check-input fs-3 m-0" type="checkbox" role="switch" th:field="*{entries[__${stat.index}__].dnf}" title="Zaznacz, jeśli kierowca nie ukończył">
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="text-center mt-4 pt-3 border-top border-secondary border-opacity-25">
+                    <button type="submit" class="btn btn-success-glow w-100 py-3 fs-5" onclick="return confirm('🚨 CZY NA PEWNO ZATWIERDZIĆ WYNIKI? \n\nUpewnij się, że pozycje i czasy są poprawne. Po zapisaniu wyścig zniknie z nadchodzących rund i trafi do Archiwum!');">
+                        <i class="bi bi-check2-all me-2 fs-4 align-middle"></i> Zatwierdź Wyniki i Archiwizuj Wyścig
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
